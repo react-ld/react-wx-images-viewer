@@ -3,6 +3,7 @@ var webpack = require('webpack');
 var clean = require('gulp-clean');
 var gutil = require('gulp-util');
 var ftp = require( 'vinyl-ftp' );
+var ghPages = require('gulp-gh-pages');
 var deploy = require('./deploy.config.json');
 var deploy_remote_path = "/public/17zt/viewer"
 var webpack_config_demo = require('./webpack.config.example.js');
@@ -29,4 +30,11 @@ gulp.task('deploy:demo', ['build:demo'], function () {
     .pipe(conn.dest(deploy_remote_path))
 })
 
+gulp.task('deploy:gh-pages', ['build:demo'], function() {
+  return gulp.src('./demo/**')
+    .pipe(ghPages());
+});
+
 gulp.task('demo', ['deploy:demo']);
+
+gulp.task('gh-pages', ['deploy:gh-pages']);
