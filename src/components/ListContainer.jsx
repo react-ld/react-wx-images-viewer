@@ -95,7 +95,53 @@ class ListContainer extends PureComponent {
   }
 
   state = {
-    width: 0,
+    left: 0,
+    isNeedSpring: false
+  }
+
+  componentWillMount() {
+    const {
+      screenWidth,
+      urls,
+      index,
+      gap
+    } = this.props;
+
+    this.length = urls.length;
+    this.perDistance = screenWidth + gap;
+    this.maxLeft = this.perDistance * (this.length - 1);
+
+    this.setState({
+      left: - this.perDistance * index,
+      isNeedSpring: false
+    })
+  }  
+
+  handleStart = () =>{
+    console.info("ListContainer handleStart")
+    this.startLeft = this.state.left;
+    this.setState({
+      isNeedSpring: false
+    })
+  }
+
+  handleMove = (diffX) =>{
+    console.info("ListContainer handleStart diffX = %s",diffX);
+
+    this.setState({
+      left: this.startLeft + diffX,
+      isNeedSpring: false
+    })
+  }
+
+  handleEnd = () =>{
+    let left = Math.round(this.state.left / this.perDistance) * this.perDistance
+    if(left > 0){ left = 0}
+    if(left < -this.maxLeft){ left = -this.maxLeft}
+    this.setState({
+      left,
+      isNeedSpring: true
+    })
   }
 
   render() {
@@ -107,22 +153,54 @@ class ListContainer extends PureComponent {
       gap
     } = this.props;
 
-    let defaultStyle = {
-      left: - (screenWidth + gap) * index
-    }
+    const {
+      left,
+      isNeedSpring
+    } = this.state
 
     return (
-      <HandleWrapContainer 
+      <Motion style={{x: isNeedSpring ? spring(left) : left}}>
+        {
+          ({x}) => {
+            let defaultStyle = {
+              WebkitTransform: `translate3d(${x}px, 0, 0)`,
+              transform: `translate3d(${x}px, 0, 0)`,
+            }
+
+            return (
+              <div 
+                className="viewer-list-container"
+                style={defaultStyle}
+                >
+                { 
+                  urls.map((item,i) => <ImageContainer
+                  key={i}
+                  src={item}
+                  handleStart={this.handleStart}
+                  handleMove={this.handleMove}
+                  handleEnd={this.handleEnd}
+                  left={this.perDistance * i}
+                  screenWidth={screenWidth}
+                  screenHeight={screenHeight}/>)
+                }
+              </div>
+            )
+          }
+        }
+      </Motion>
+      /*<HandleWrapContainer 
         style={defaultStyle}
         diff={screenWidth + gap}
         maxW={(screenWidth + gap)*(urls.length-1)}>
-        { urls.map((item,i) => <ImageContainer
+        { 
+          urls.map((item,i) => <ImageContainer
           key={i}
           src={item}
-          left={(screenWidth + gap) * i}
+          left={this.perDistance * i}
           screenWidth={screenWidth}
-          screenHeight={screenHeight}/>) }
-      </HandleWrapContainer>
+          screenHeight={screenHeight}/>)
+        }
+      </HandleWrapContainer>*/
     );
   }
 }

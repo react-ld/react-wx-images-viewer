@@ -1,11 +1,17 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
-const IMG_RESET_SIZE = {
-  width: 0,
-  height: 0,
-  left: 0,
-  top: 0,
+/**
+ * 
+ * @param {number} value 
+ * @param {number} min 
+ * @param {number} max 
+ */
+
+function setScope(value, min, max){
+  if(value < min){ return min}
+  if(value > max){ return max}
+  return value;
 }
 
 /**
@@ -25,19 +31,16 @@ const IMG_RESET_SIZE = {
  * 对应关系： newPointLeft = zoom * oldPointLeft
  *          newPointTop = zoom * oldPointTop
  * 
- * 坐标位置：left = (newPointLeft - oldPointLeft) = (zoom - 1) * oldPointLeft
- *         top = (newPointTop - oldPointTop) = (zoom - 1) * oldPointTop
+ * 坐标位置：left = startLeft + (newPointLeft - oldPointLeft) = (zoom - 1) * oldPointLeft
+ *         top = startTop + (newPointTop - oldPointTop) = (zoom - 1) * oldPointTop
  */
-
-function setScope(value, min, max){
-  if(value < min){ return min}
-  if(value > max){ return max}
-  return value;
-}
 
 class ImageContainer extends PureComponent {
   static propTypes = {
     maxZoomNum: PropTypes.number,
+    handleStart: PropTypes.func,
+    handleMove: PropTypes.func,
+    handleEnd: PropTypes.func
   }
 
   static defaultProps = {
@@ -66,21 +69,25 @@ class ImageContainer extends PureComponent {
 
     switch (event.touches.length) {
       case 1:
-      	// event.preventDefault();
-		    // event.stopPropagation();
+      	event.preventDefault();
         let targetEvent = event.touches[0];
         this.startX = targetEvent.clientX;
         this.startY = targetEvent.clientY;
 
         this.startLeft = this.state.left;
         this.startTop = this.state.top;
+
+        if(this.state.width === this.originWidth){
+          this.callHandleStart()
+        }
       break;
 
       case 2: //两个手指
       	event.preventDefault();
 		    event.stopPropagation();
 
-        this.isTwoFinger = true;
+        //设置手双指模式
+        this.isTwoFingerMode = true;
 
         //计算两个手指中间点屏幕上的坐标
         const middlePointClientLeft = Math.abs(Math.round((event.touches[ 0 ].clientX + event.touches[ 1 ].clientX) / 2));
@@ -95,60 +102,59 @@ class ImageContainer extends PureComponent {
         //计算手指中间点在图片上的位置（坐标值）
         this.oldPointLeft = middlePointClientLeft - this.startLeft;
         this.oldPointTop = middlePointClientTop - this.startTop;
-        console.info("this.oldPointLeft = %s; this.oldPointTop = %s", this.oldPointLeft, this.oldPointTop);
 
 				var dx = event.touches[ 0 ].clientX - event.touches[ 1 ].clientX;
 				var dy = event.touches[ 0 ].clientY - event.touches[ 1 ].clientY;
         this._touchZoomDistanceStart = this._touchZoomDistanceEnd = Math.sqrt( dx * dx + dy * dy );
-
-        console.info("this._touchZoomDistanceStart = ", this._touchZoomDistanceStart);
       break;
-
       default:
       break;
     }
   }
 
   handleTouchMove = (event) =>{
-    // console.info("handleTouchMove = %s",event.touches[ 0 ].clientX)
-
     switch (event.touches.length) {
       case 1:
         let targetEvent = event.touches[0],
           diffX = targetEvent.clientX - this.startX,
           diffY = targetEvent.clientY - this.startY;
 
-        
-        let top = (this.props.screenHeight - this.state.height)/2,
-          left = setScope(this.startLeft + diffX, ( this.originWidth - this.state.width ), 0 );
+        //图片宽度等于初始宽度，直接调用 handleMove 函数
+        if(this.state.width === this.originWidth){
+          if(this.props.handleMove){
+            this.props.handleMove(diffX);
+          }
+        } else{
+          let top = (this.props.screenHeight - this.state.height)/2,
+            left = this.startLeft + diffX;
 
-        if(this.state.height > this.props.screenHeight){
-          top = setScope(this.startTop + diffY, ( this.props.screenHeight - this.state.height ), 0 );
+          if(this.state.height > this.props.screenHeight){
+            top = setScope(this.startTop + diffY, ( this.props.screenHeight - this.state.height ), 0 );
+          }
+
+          if(left < this.originWidth - this.state.width){
+            this.callHandleStart();
+            if(this.props.handleMove){
+              this.props.handleMove(left + this.state.width - this.originWidth);
+            }
+          } else if(left > 0){
+            this.callHandleStart();
+            if(this.props.handleMove){
+              this.props.handleMove(left);
+            }
+          }
+
+          left = setScope(left, this.originWidth - this.state.width, 0);
+
+          console.info("this.startX = %s, this.startY = %s, this.startLeft = %s, this.startTop = %s, diffX = %s, diffY = %s", this.startX, this.startY, this.startLeft, this.startTop, diffX, diffY);
+          this.setState({
+            left,
+            top
+          })
+
         }
 
-        console.info("this.startX = %s, this.startY = %s, this.startLeft = %s, this.startTop = %s, diffX = %s, diffY = %s", this.startX, this.startY, this.startLeft, this.startTop, diffX, diffY);
-        this.setState({
-          left,
-          top
-        })
-        if(this.startLeft + diffX < 0 && this.startLeft + diffX > this.originWidth - this.state.width){
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        // this.setState((prevState, props) => {
-        //   let top = (props.screenHeight - prevState.height)/2,
-        //     left = setScope(this.startLeft + diffX, ( this.originWidth - prevState.width ), 0 );
-
-        //   if(prevState.height > props.screenHeight){
-        //     top = setScope(this.startTop + diffY, ( props.screenHeight - prevState.height ), 0 );
-        //   }
-
-        //   console.info("left = %s ; top = %s", left, top);
-        //   return {
-        //     left,
-        //     top
-        //   }
-        // })
+        event.preventDefault();
       break;
 
       case 2: //两个手指
@@ -185,8 +191,8 @@ class ImageContainer extends PureComponent {
 
   handleTouchEnd = (event) =>{
     console.info("handleTouchEnd", event.touches.length);
-    if(this.isTwoFinger){
-      this.isTwoFinger = false;
+    if(this.isTwoFingerMode){//双指操作结束
+      this.isTwoFingerMode = false;
       let left, top, width, height;
 
       width = setScope(this.state.width, this.originWidth, this.props.maxZoomNum * this.originWidth);
@@ -220,6 +226,25 @@ class ImageContainer extends PureComponent {
         this.startTop = top;
         console.info("this.startX = %s, this.startY = %s, this.startLeft = %s, this.startTop = %s", this.startX, this.startY, this.startLeft, this.startTop);
       }
+    } else{//单指结束（ontouchend）
+      this.callHandleEnd();
+    }
+    event.preventDefault();
+  }
+
+  callHandleStart = () =>{
+    if(!this.isCalledHandleStart){
+      this.isCalledHandleStart = true;
+      if(this.props.handleStart){
+        this.props.handleStart();
+      }
+    }
+  }
+
+  callHandleEnd = () =>{
+    this.isCalledHandleStart = false;
+    if(this.props.handleEnd){
+      this.props.handleEnd();
     }
   }
 

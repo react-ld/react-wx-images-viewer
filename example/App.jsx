@@ -24,7 +24,7 @@ class App extends Component {
           {
             this.state.imags.map(item => {
               console.info("111",item);
-              return <div className="img">
+              return <div className="img" key={item}>
                 <img src={item} alt="" width="100%" height="auto" className=""/> 
               </div>
             })
