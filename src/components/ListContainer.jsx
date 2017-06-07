@@ -4,6 +4,9 @@ import {Motion, spring} from 'react-motion';
 
 import ImageContainer from './ImageContainer'
 
+//快速拖动时间限制
+const DEDAULT_TIME_DIFF = 200;
+
 class ListContainer extends PureComponent {
   static propTypes = {
     gap: PropTypes.number,
@@ -14,6 +17,7 @@ class ListContainer extends PureComponent {
   }
 
   state = {
+    index: 0,
     left: 0,
     isNeedSpring: false
   }
@@ -31,6 +35,7 @@ class ListContainer extends PureComponent {
     this.maxLeft = this.perDistance * (this.length - 1);
 
     this.setState({
+      index,
       left: - this.perDistance * index,
       isNeedSpring: false
     })
@@ -55,6 +60,7 @@ class ListContainer extends PureComponent {
   handleStart = () =>{
     console.info("ListContainer handleStart")
     this.startLeft = this.state.left;
+    this.startTime = (new Date()).getTime();
     this.setState({
       isNeedSpring: false
     })
@@ -74,11 +80,26 @@ class ListContainer extends PureComponent {
   }
 
   handleEnd = () =>{
-    let left = Math.round(this.state.left / this.perDistance) * this.perDistance
-    if(left > 0){ left = 0}
-    if(left < -this.maxLeft){ left = -this.maxLeft}
+    let index, left, diffTime = (new Date()).getTime() - this.startTime;
+
+    //快速拖动情况下切换图片
+    if(diffTime < DEDAULT_TIME_DIFF){
+      if(this.state.left < this.startLeft){
+        index = this.state.index + 1;
+      } else{
+        index = this.state.index - 1;
+      }
+    } else{
+      index = Math.abs(Math.round(this.state.left / this.perDistance));
+    }
+
+    //处理边界情况
+    if(index < 0){ index = 0}
+    else if(index > this.length - 1){ index = this.length - 1}
+
     this.setState({
-      left,
+      index,
+      left: - this.perDistance * index,
       isNeedSpring: true
     })
   }
