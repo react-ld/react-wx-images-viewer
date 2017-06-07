@@ -4,7 +4,7 @@
   "description": "Images viewer is a react component use in mobile website App, that function same as Weixin native viewer.",
   "main": "index.js",
   "scripts": {
-    "start": "webpack-dev-server --config webpack.config.js",    
+    "start": "webpack-dev-server --config webpack.config.js",
     "example": "rm -rf ./demo/* & NODE_ENV=development webpack --config webpack.config.example.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -33,12 +33,16 @@
     "babel-preset-stage-1": "^6.24.1",
     "css-loader": "^0.28.4",
     "file-loader": "^0.11.1",
+    "gulp": "^3.9.1",
+    "gulp-clean": "^0.3.2",
+    "gulp-util": "^3.0.8",
     "html-webpack-plugin": "^2.28.0",
     "less": "^2.7.2",
     "less-loader": "^4.0.4",
     "postcss-loader": "^2.0.5",
     "style-loader": "^0.18.1",
     "url-loader": "^0.5.8",
+    "vinyl-ftp": "^0.6.0",
     "webpack": "^2.6.1",
     "webpack-dev-server": "^2.4.5"
   },
