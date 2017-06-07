@@ -44,7 +44,6 @@ class App extends Component {
         <div className="img-list">
           {
             this.state.imags.map((item, index) => {
-              console.info("111",item);
               return <div className="img" key={item}>
                 <img src={item} alt="" onClick={this.openViewer.bind(this, index)} width="100%" height="auto" className=""/> 
               </div>
