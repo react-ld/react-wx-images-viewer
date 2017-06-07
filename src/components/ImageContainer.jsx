@@ -242,9 +242,11 @@ class ImageContainer extends PureComponent {
   }
 
   callHandleEnd = () =>{
-    this.isCalledHandleStart = false;
-    if(this.props.handleEnd){
-      this.props.handleEnd();
+    if(this.isCalledHandleStart){
+      this.isCalledHandleStart = false;
+      if(this.props.handleEnd){
+        this.props.handleEnd();
+      }
     }
   }
 
