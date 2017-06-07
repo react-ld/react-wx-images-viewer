@@ -28,7 +28,11 @@ class WxImageViewer extends Component {
     zIndex: PropTypes.number,
     urls: PropTypes.array.isRequired, // 需要预览的图片http链接列表
     index: PropTypes.number, // 当前显示图片的http链接
+    onClose: PropTypes.func.isRequired
   }
+  static childContextTypes = {
+    onClose: PropTypes.func
+  };
 
   static defaultProps = {
     zIndex: 100,
@@ -50,6 +54,10 @@ class WxImageViewer extends Component {
   
   componentWillUnmount() {
     this.removePortal();
+  }
+
+  getChildContext() {
+    return {onClose: this.props.onClose};
   }
 
   removePortal(){

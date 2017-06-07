@@ -19,16 +19,13 @@ class WrapViewer extends Component {
   static defaultProps = {
     zIndex: 100,
   }
-
-  componentWillMount() {
-    
-  }
   
   render() {
     const {
       zIndex,
       urls,
-      index
+      index,
+      onClose
     } = this.props
 
     defaultStyle.zIndex = zIndex;
