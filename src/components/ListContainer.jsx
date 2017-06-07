@@ -116,6 +116,22 @@ class ListContainer extends PureComponent {
       isNeedSpring: false
     })
   }  
+  /**
+   * 拖拽的缓动公式 - easeOutSine
+   * Link http://easings.net/zh-cn#
+   * t: current time（当前时间）；
+   * b: beginning value（初始值）；
+   * c: change in value（变化量）；
+   * d: duration（持续时间）。
+   */
+  easing = (distance) => {
+    var t = distance;
+    var b = 0;
+    var d = this.props.screenWidth; // 允许拖拽的最大距离
+    var c = d / 2.5; // 提示标签最大有效拖拽距离
+
+    return c * Math.sin(t / d * (Math.PI / 2)) + b;
+  }
 
   handleStart = () =>{
     console.info("ListContainer handleStart")
@@ -127,7 +143,11 @@ class ListContainer extends PureComponent {
 
   handleMove = (diffX) =>{
     console.info("ListContainer handleStart diffX = %s",diffX);
-
+    if(this.state.left >= 0 && diffX > 0){
+      diffX = this.easing(diffX);
+    } else if(this.state.left <= - this.maxLeft && diffX < 0){
+      diffX = -this.easing(-diffX);
+    }
     this.setState({
       left: this.startLeft + diffX,
       isNeedSpring: false
