@@ -47,6 +47,10 @@ class ImageContainer extends PureComponent {
     maxZoomNum: 4,
   }
 
+  static contextTypes = {
+    onClose: PropTypes.func
+  };
+
   state = {
     width: 0,
     height: 0,
@@ -80,6 +84,8 @@ class ImageContainer extends PureComponent {
         if(this.state.width === this.originWidth){
           this.callHandleStart()
         }
+        this.onTouchStartTime = (new Date()).getTime();
+        this.isTap = true;
       break;
 
       case 2: //两个手指
@@ -118,6 +124,11 @@ class ImageContainer extends PureComponent {
         let targetEvent = event.touches[0],
           diffX = targetEvent.clientX - this.startX,
           diffY = targetEvent.clientY - this.startY;
+        
+        //判断是否移动
+        if(Math.abs(diffX) > 5 || Math.abs(diffY) > 5){
+          this.isTap = false;
+        }
 
         //图片宽度等于初始宽度，直接调用 handleMove 函数
         if(this.state.width === this.originWidth){
@@ -228,6 +239,10 @@ class ImageContainer extends PureComponent {
       }
     } else{//单指结束（ontouchend）
       this.callHandleEnd();
+      let diffTime = (new Date()).getTime() - this.onTouchStartTime
+      if(diffTime < 100 && this.isTap){
+        this.context.onClose();
+      }
     }
     event.preventDefault();
   }
