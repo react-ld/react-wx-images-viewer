@@ -15,6 +15,7 @@ function setScope(value, min, max){
 }
 
 /**
+ * 图片默认展示模式：宽度等于屏幕宽度，高度等比缩放；水平居中，垂直居中或者居顶（当高度大于屏幕高度时）
  * 图片实际尺寸： actualWith, actualHeight
  * 图片初始尺寸： originWidth, originHeight
  * 坐标位置：left, top
@@ -89,10 +90,10 @@ class ImageContainer extends PureComponent {
 
   handleTouchStart = (event) =>{
     console.info("handleTouchStart")
+    event.preventDefault();
 
     switch (event.touches.length) {
       case 1:
-      	event.preventDefault();
         let targetEvent = event.touches[0];
         this.startX = targetEvent.clientX;
         this.startY = targetEvent.clientY;
@@ -100,16 +101,14 @@ class ImageContainer extends PureComponent {
         this.startLeft = this.state.left;
         this.startTop = this.state.top;
 
-        if(this.state.width === this.originWidth){
-          this.callHandleStart()
-        }
+        // if(this.state.width === this.originWidth){
+        //   this.callHandleStart()
+        // }
         this.onTouchStartTime = (new Date()).getTime();
         this.isTap = true;
       break;
 
       case 2: //两个手指
-      	event.preventDefault();
-		    event.stopPropagation();
 
         //设置手双指模式
         this.isTwoFingerMode = true;
@@ -138,6 +137,8 @@ class ImageContainer extends PureComponent {
   }
 
   handleTouchMove = (event) =>{
+    event.preventDefault();
+
     switch (event.touches.length) {
       case 1:
         let targetEvent = event.touches[0],
@@ -152,49 +153,48 @@ class ImageContainer extends PureComponent {
         //图片宽度等于初始宽度，直接调用 handleMove 函数
         if(this.state.width === this.originWidth){
           if(this.props.handleMove){
-            this.props.handleMove(diffX);
+            // this.callHandleStart();
+            // this.props.handleMove(diffX);
+            this.callHandleMove(diffX);
           }
         } else{
-          let top = (this.props.screenHeight - this.state.height)/2,
-            left = this.startLeft + diffX;
+          this.setState((prevState, props) =>{
+            let top = (props.screenHeight - prevState.height)/2,
+              left = this.startLeft + diffX;
 
-          if(this.state.height > this.props.screenHeight){
-            top = setScope(this.startTop + diffY, ( this.props.screenHeight - this.state.height ), 0 );
-          }
-
-          if(left < this.originWidth - this.state.width){
-            // this.callHandleStart();
-            if(this.props.handleMove){
-              this.props.handleMove(left + this.state.width - this.originWidth);
+            if(prevState.height > props.screenHeight){
+              top = setScope(this.startTop + diffY, ( props.screenHeight - prevState.height ), 0 );
             }
-          } else if(left > 0){
-            // this.callHandleStart();
-            if(this.props.handleMove){
-              this.props.handleMove(left);
+            console.info("left = %s, this.originWidth - prevState.width = %s",left,this.originWidth - prevState.width)
+            //存在 handleMove 函数
+            if(props.handleMove){
+              if(left < this.originWidth - prevState.width){
+                // this.callHandleStart();
+                // props.handleMove(left + prevState.width - this.originWidth);
+                this.callHandleMove(left + prevState.width - this.originWidth);
+              } else if(left > 0){
+                // this.callHandleStart();
+                // props.handleMove(left);
+                this.callHandleMove(left);
+              }
             }
-          }
 
-          left = setScope(left, this.originWidth - this.state.width, 0);
+            left = setScope(left, this.originWidth - prevState.width, 0);
 
-          console.info("this.startX = %s, this.startY = %s, this.startLeft = %s, this.startTop = %s, diffX = %s, diffY = %s", this.startX, this.startY, this.startLeft, this.startTop, diffX, diffY);
-          this.setState({
-            left,
-            top
+            console.info("this.startX = %s, this.startY = %s, this.startLeft = %s, this.startTop = %s, diffX = %s, diffY = %s", this.startX, this.startY, this.startLeft, this.startTop, diffX, diffY);
+            return {
+              left,
+              top
+            }
           })
-
         }
 
-        event.preventDefault();
       break;
 
       case 2: //两个手指
-      	event.preventDefault();
-		    event.stopPropagation();
-
 				var dx = event.touches[ 0 ].clientX - event.touches[ 1 ].clientX;
 				var dy = event.touches[ 0 ].clientY - event.touches[ 1 ].clientY;
         this._touchZoomDistanceEnd = Math.sqrt( dx * dx + dy * dy );
-        console.info("this._touchZoomDistanceEnd = ", this._touchZoomDistanceEnd);
 
         let zoom = Math.sqrt(this._touchZoomDistanceEnd / this._touchZoomDistanceStart);
 
@@ -221,40 +221,48 @@ class ImageContainer extends PureComponent {
 
   handleTouchEnd = (event) =>{
     console.info("handleTouchEnd", event.touches.length);
+    event.preventDefault();
+
     if(this.isTwoFingerMode){//双指操作结束
+      let touchLen = event.touches.length;
       this.isTwoFingerMode = false;
-      let left, top, width, height;
 
-      width = setScope(this.state.width, this.originWidth, this.props.maxZoomNum * this.originWidth);
-      height = setScope(this.state.height, this.originHeight, this.props.maxZoomNum * this.originHeight);
-
-      let zoom = width / this.startWidth;
-
-      left = setScope(this.startLeft + (1 - zoom) * this.oldPointLeft, this.originWidth - width, 0);
-
-      if(height > this.props.screenHeight){
-        top = setScope(this.startTop + (1 - zoom) * this.oldPointTop, this.props.screenHeight - height, 0);
-      } else{
-        top = (this.props.screenHeight - height) / 2;
-      }
-
-      console.info("zoom = %s, left = %s, top = %s, width=%s, height= %s", zoom, left, top,width,height);
-      this.setState({
-        width,
-        height,
-        left,
-        top
-      })
-      if(event.touches.length === 1){
+      if(touchLen === 1){
         let targetEvent = event.touches[0];
         this.startX = targetEvent.clientX;
         this.startY = targetEvent.clientY;
-
-        this.startLeft = left;
-        this.startTop = top;
-        console.info("this.startX = %s, this.startY = %s, this.startLeft = %s, this.startTop = %s", this.startX, this.startY, this.startLeft, this.startTop);
-        this.callHandleStart();
       }
+
+      this.setState((prevState, props) => {
+        let left, top, width, height, zoom;
+
+        width = setScope(prevState.width, this.originWidth, props.maxZoomNum * this.originWidth);
+        height = setScope(prevState.height, this.originHeight, props.maxZoomNum * this.originHeight);
+
+        zoom = width / this.startWidth;
+        left = setScope(this.startLeft + (1 - zoom) * this.oldPointLeft, this.originWidth - width, 0);
+
+        if(height > props.screenHeight){
+          top = setScope(this.startTop + (1 - zoom) * this.oldPointTop, props.screenHeight - height, 0);
+        } else{
+          top = (props.screenHeight - height) / 2;
+        }
+
+        if(touchLen === 1){
+          this.startLeft = left;
+          this.startTop = top;
+          console.info("this.startX = %s, this.startY = %s, this.startLeft = %s, this.startTop = %s", this.startX, this.startY, this.startLeft, this.startTop);
+        }
+
+        console.info("zoom = %s, left = %s, top = %s, width=%s, height= %s", zoom, left, top,width,height);
+        return {
+          width,
+          height,
+          left,
+          top
+        }
+      })
+
     } else{//单指结束（ontouchend）
       this.callHandleEnd();
       let diffTime = (new Date()).getTime() - this.onTouchStartTime
@@ -262,16 +270,24 @@ class ImageContainer extends PureComponent {
         this.context.onClose();
       }
     }
-    event.preventDefault();
   }
 
-  callHandleStart = () =>{
+  // callHandleStart = () =>{
+  //   if(!this.isCalledHandleStart){
+  //     this.isCalledHandleStart = true;
+  //     if(this.props.handleStart){
+  //       this.props.handleStart();
+  //     }
+  //   }
+  // }
+  callHandleMove = (diffX) =>{
     if(!this.isCalledHandleStart){
       this.isCalledHandleStart = true;
       if(this.props.handleStart){
         this.props.handleStart();
       }
     }
+    this.props.handleMove(diffX);
   }
 
   callHandleEnd = () =>{
