@@ -9,17 +9,18 @@ const DEDAULT_TIME_DIFF = 200;
 
 class ListContainer extends PureComponent {
   static propTypes = {
-    gap: PropTypes.number,
-  }
-
-  static defaultProps = {
-    gap: 10,
+    maxZoomNum: PropTypes.number.isRequired,
+    changeIndex: PropTypes.func.isRequired,
+    gap: PropTypes.number.isRequired,
   }
 
   state = {
-    index: 0,
     left: 0,
-    isNeedSpring: false
+  }
+
+  constructor(){
+    super();
+    this.isNeedSpring = false;
   }
 
   componentWillMount() {
@@ -27,18 +28,18 @@ class ListContainer extends PureComponent {
       screenWidth,
       urls,
       index,
+      changeIndex,
       gap
     } = this.props;
 
     this.length = urls.length;
     this.perDistance = screenWidth + gap;
     this.maxLeft = this.perDistance * (this.length - 1);
+    this.isNeedSpring = false;
 
     this.setState({
-      index,
       left: - this.perDistance * index,
-      isNeedSpring: false
-    })
+    });
   }  
   /**
    * 拖拽的缓动公式 - easeOutSine
@@ -58,24 +59,22 @@ class ListContainer extends PureComponent {
   }
 
   handleStart = () =>{
-    console.info("ListContainer handleStart")
+    // console.info("ListContainer handleStart")
     this.startLeft = this.state.left;
     this.startTime = (new Date()).getTime();
-    this.setState({
-      isNeedSpring: false
-    })
+    this.isNeedSpring = false;
   }
 
   handleMove = (diffX) =>{
-    console.info("ListContainer handleStart diffX = %s",diffX);
+    // console.info("ListContainer handleStart diffX = %s",diffX);
     if(this.state.left >= 0 && diffX > 0){
       diffX = this.easing(diffX);
     } else if(this.state.left <= - this.maxLeft && diffX < 0){
       diffX = -this.easing(-diffX);
     }
+
     this.setState({
       left: this.startLeft + diffX,
-      isNeedSpring: false
     })
   }
 
@@ -85,9 +84,9 @@ class ListContainer extends PureComponent {
     //快速拖动情况下切换图片
     if(diffTime < DEDAULT_TIME_DIFF){
       if(this.state.left < this.startLeft){
-        index = this.state.index + 1;
+        index = this.props.index + 1;
       } else{
-        index = this.state.index - 1;
+        index = this.props.index - 1;
       }
     } else{
       index = Math.abs(Math.round(this.state.left / this.perDistance));
@@ -98,28 +97,28 @@ class ListContainer extends PureComponent {
     else if(index > this.length - 1){ index = this.length - 1}
 
     this.setState({
-      index,
       left: - this.perDistance * index,
-      isNeedSpring: true
     })
+    this.isNeedSpring = true;
+    this.props.changeIndex(index);
   }
 
   render() {
     const {
+      maxZoomNum,
       screenWidth,
       screenHeight,
-      urls,
       index,
+      urls,
       gap
     } = this.props;
 
     const {
       left,
-      isNeedSpring
     } = this.state
 
     return (
-      <Motion style={{x: isNeedSpring ? spring(left) : left}}>
+      <Motion style={{x: this.isNeedSpring ? spring( left) : left}}>
         {
           ({x}) => {
             let defaultStyle = {
@@ -136,6 +135,7 @@ class ListContainer extends PureComponent {
                   urls.map((item,i) => <ImageContainer
                   key={i}
                   src={item}
+                  maxZoomNum={maxZoomNum}
                   handleStart={this.handleStart}
                   handleMove={this.handleMove}
                   handleEnd={this.handleEnd}
@@ -148,19 +148,6 @@ class ListContainer extends PureComponent {
           }
         }
       </Motion>
-      /*<HandleWrapContainer 
-        style={defaultStyle}
-        diff={screenWidth + gap}
-        maxW={(screenWidth + gap)*(urls.length-1)}>
-        { 
-          urls.map((item,i) => <ImageContainer
-          key={i}
-          src={item}
-          left={this.perDistance * i}
-          screenWidth={screenWidth}
-          screenHeight={screenHeight}/>)
-        }
-      </HandleWrapContainer>*/
     );
   }
 }

@@ -37,14 +37,10 @@ function setScope(value, min, max){
 
 class ImageContainer extends PureComponent {
   static propTypes = {
-    maxZoomNum: PropTypes.number,
+    maxZoomNum: PropTypes.number.isRequired,
     handleStart: PropTypes.func,
     handleMove: PropTypes.func,
     handleEnd: PropTypes.func
-  }
-
-  static defaultProps = {
-    maxZoomNum: 4,
   }
 
   static contextTypes = {
@@ -60,7 +56,30 @@ class ImageContainer extends PureComponent {
     isLoaded: false
   }
 
-  componentDidMount() {
+  constructor(){
+    super();
+    this.actualHeight = 0; //图片实际高度
+    this.actualWith = 0;   //图片实际宽度
+
+    this.originHeight = 0; //图片默认展示模式下高度
+    this.originWidth = 0;  //图片默认展示模式下宽度
+
+    this.startHeight = 0;  //开始触摸操作时的高度
+    this.startWidth = 0;   //开始触摸操作时的宽度
+    this.startLeft = 0;    //开始触摸操作时的 left 值
+    this.startTop = 0;     //开始触摸操作时的 top 值
+
+    this.onTouchStartTime = 0; //单指触摸开始时间
+    this.isTap = false; //是否为 Tap 事件
+
+    this.isTwoFingerMode = false; //是否为双指模式
+    this.oldPointLeft = 0;//计算手指中间点在图片上的位置（坐标值）
+    this.oldPointTop = 0;//计算手指中间点在图片上的位置（坐标值）
+    this._touchZoomDistanceStart = 0; //用于记录双指距离
+
+  }
+
+  componentWillMount() {
     this.loadImg(this.props.src);
   }
 
@@ -144,12 +163,12 @@ class ImageContainer extends PureComponent {
           }
 
           if(left < this.originWidth - this.state.width){
-            this.callHandleStart();
+            // this.callHandleStart();
             if(this.props.handleMove){
               this.props.handleMove(left + this.state.width - this.originWidth);
             }
           } else if(left > 0){
-            this.callHandleStart();
+            // this.callHandleStart();
             if(this.props.handleMove){
               this.props.handleMove(left);
             }
@@ -227,8 +246,6 @@ class ImageContainer extends PureComponent {
         top
       })
       if(event.touches.length === 1){
-      	event.preventDefault();
-		    event.stopPropagation();
         let targetEvent = event.touches[0];
         this.startX = targetEvent.clientX;
         this.startY = targetEvent.clientY;
@@ -236,6 +253,7 @@ class ImageContainer extends PureComponent {
         this.startLeft = left;
         this.startTop = top;
         console.info("this.startX = %s, this.startY = %s, this.startLeft = %s, this.startTop = %s", this.startX, this.startY, this.startLeft, this.startTop);
+        this.callHandleStart();
       }
     } else{//单指结束（ontouchend）
       this.callHandleEnd();

@@ -8,35 +8,26 @@ import './WxImageViewer.less';
 
 const renderSubtreeIntoContainer = ReactDOM.unstable_renderSubtreeIntoContainer;
 
-// let WxImageViewerRootNode;
-
-/**
- * DOM node singleton
- */
-// function getRootNode(){
-//   if(!WxImageViewerRootNode){
-//     WxImageViewerRootNode = document.createElement('div');
-//     document.body.appendChild(WxImageViewer);
-//   }
-
-//   return WxImageViewerRootNode;
-// }
-
 class WxImageViewer extends Component {
 
   static propTypes = {
-    zIndex: PropTypes.number,
-    urls: PropTypes.array.isRequired, // 需要预览的图片http链接列表
-    index: PropTypes.number, // 当前显示图片的http链接
-    onClose: PropTypes.func.isRequired
+    maxZoomNum: PropTypes.number.isRequired,     //最大放大倍数
+    zIndex: PropTypes.number.isRequired,         //组件图层深度
+    index: PropTypes.number.isRequired,          // 当前显示图片的http链接
+    urls: PropTypes.array.isRequired,            // 需要预览的图片http链接列表
+    gap: PropTypes.number.isRequired,            //间隙
+    onClose: PropTypes.func.isRequired,          //关闭组件回调
   }
+  
   static childContextTypes = {
     onClose: PropTypes.func
   };
 
   static defaultProps = {
+    maxZoomNum: 4,
     zIndex: 100,
     index: 0,
+    gap: 10,
   }
 
   componentDidMount() {
