@@ -1,18 +1,23 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
+import raf from 'raf';
+import tween from './tween.js'
+
 /**
  * 
  * @param {number} value 
  * @param {number} min 
  * @param {number} max 
  */
-
 function setScope(value, min, max){
   if(value < min){ return min}
   if(value > max){ return max}
   return value;
 }
+
+const msPerFrame = 1000 / 60;
+const maxAnimateTime = 1000;
 
 /**
  * 图片默认展示模式：宽度等于屏幕宽度，高度等比缩放；水平居中，垂直居中或者居顶（当高度大于屏幕高度时）
@@ -78,6 +83,16 @@ class ImageContainer extends PureComponent {
     this.oldPointTop = 0;//计算手指中间点在图片上的位置（坐标值）
     this._touchZoomDistanceStart = 0; //用于记录双指距离
 
+    this.animationID = 0;
+    this.animateCurTime = 0;
+    this.animateStartValue = {
+      x: 0,
+      y: 0,
+    }
+    this.animateFinalValue = {
+      x: 0,
+      y: 0,
+    }
   }
 
   componentWillMount() {
@@ -86,12 +101,17 @@ class ImageContainer extends PureComponent {
 
   componentWillUnmount() {
     this.unloadImg();
+    if(this.animationID){
+      raf.cancel(this.animationID);
+    }
   }
 
   handleTouchStart = (event) =>{
     console.info("handleTouchStart")
     event.preventDefault();
-
+    if(this.animationID){
+      raf.cancel(this.animationID);
+    }
     switch (event.touches.length) {
       case 1:
         let targetEvent = event.touches[0];
@@ -145,6 +165,8 @@ class ImageContainer extends PureComponent {
           diffX = targetEvent.clientX - this.startX,
           diffY = targetEvent.clientY - this.startY;
         
+        this.diffX = diffX;
+        this.diffY = diffY;
         //判断是否移动
         if(Math.abs(diffX) > 5 || Math.abs(diffY) > 5){
           this.isTap = false;
@@ -264,22 +286,85 @@ class ImageContainer extends PureComponent {
       })
 
     } else{//单指结束（ontouchend）
-      this.callHandleEnd();
-      let diffTime = (new Date()).getTime() - this.onTouchStartTime
+      let diffTime = (new Date()).getTime() - this.onTouchStartTime,
+        diffx = this.diffX,
+        diffy = this.diffY;
+        // diffx = this.state.left - this.startLeft,
+        // diffy = this.state.top - this.startTop;
+        console.info("diffx = %s, diffy = %s", diffx, diffy);
       if(diffTime < 100 && this.isTap){
         this.context.onClose();
+      } else{
+        this.callHandleEnd( diffy < 30);
+
+        if(diffTime < maxAnimateTime/2){
+          let x,y;
+          
+          //使用相同速度算法
+          x = diffx * maxAnimateTime/diffTime + this.startLeft;
+          y = diffy * maxAnimateTime/diffTime + this.startTop;
+          //使用 y = A * x + b; 其中 x = diffTime 两个点（500，1）(100, 5) 带入计算得出
+          // x = diffx * (-3/400 * diffTime + 19/4) + this.startLeft;
+          // y = diffy * (-3/400 * diffTime + 19/4) + this.startTop;
+
+          x = setScope(x, this.originWidth - this.state.width, 0);
+
+          if(this.state.height > this.props.screenHeight){
+            y = setScope(y, this.props.screenHeight - this.state.height, 0);
+          } else{
+            y = this.state.top;
+          }
+          console.info("this.state.height = %s, screenHeight = %s,",this.state.height,this.props.screenHeight);
+          console.info("diffTime=%s, diffx = %s, diffy = %s, startLeft = %s, startTop=%s, x = %s, y = %s",diffTime,diffx,diffy, this.startLeft, this.startTop,x, y);
+          this.animateStartValue = {
+            x: this.state.left,
+            y: this.state.top,
+          }
+          this.animateFinalValue = {
+            x,
+            y,
+          }
+          this.animateCurTime = 0;
+          this.startAnimate();
+        }
       }
     }
   }
 
-  // callHandleStart = () =>{
-  //   if(!this.isCalledHandleStart){
-  //     this.isCalledHandleStart = true;
-  //     if(this.props.handleStart){
-  //       this.props.handleStart();
-  //     }
-  //   }
-  // }
+  startAnimate = () =>{
+    this.animationID = raf(() => {
+      let left = tween.easeOutQuart(this.animateCurTime, this.animateStartValue.x, this.animateFinalValue.x, maxAnimateTime),
+        top = tween.easeOutQuart(this.animateCurTime, this.animateStartValue.y, this.animateFinalValue.y, maxAnimateTime);
+
+      this.setState({
+        left,
+        top
+      })
+      //add Time 
+      this.animateCurTime += msPerFrame;
+      // console.info("startAnimate left= %s, top = %s, this.animateCurTime = %s", left, top, this.animateCurTime);
+      //animate complete
+      if(this.animateCurTime > maxAnimateTime){
+        this.setState((prevState, props) =>{
+          left = setScope(prevState.left, this.originWidth - prevState.width, 0);
+
+          if(prevState.height > props.screenHeight){
+            top = setScope(prevState.top, props.screenHeight - prevState.height, 0);
+          } else{
+            top = (props.screenHeight - prevState.height) / 2;
+          }
+          console.info("end animate left= %s, top = %s", left, top);
+          return {
+            left,
+            top
+          }
+        })
+      } else{
+        this.startAnimate();
+      }
+    })
+  }
+
   callHandleMove = (diffX) =>{
     if(!this.isCalledHandleStart){
       this.isCalledHandleStart = true;
@@ -290,11 +375,11 @@ class ImageContainer extends PureComponent {
     this.props.handleMove(diffX);
   }
 
-  callHandleEnd = () =>{
+  callHandleEnd = (isAllowChange) =>{
     if(this.isCalledHandleStart){
       this.isCalledHandleStart = false;
       if(this.props.handleEnd){
-        this.props.handleEnd();
+        this.props.handleEnd(isAllowChange);
       }
     }
   }

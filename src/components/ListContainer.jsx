@@ -67,6 +67,12 @@ class ListContainer extends PureComponent {
 
   handleMove = (diffX) =>{
     // console.info("ListContainer handleStart diffX = %s",diffX);
+    //限制最大 diffx 值
+    if(Math.abs(diffX) > this.props.screenWidth){
+      if(diffX < 0){diffX = - this.props.screenWidth}
+      if(diffX > 0){diffX = this.props.screenWidth}
+    }
+
     if(this.state.left >= 0 && diffX > 0){
       diffX = this.easing(diffX);
     } else if(this.state.left <= - this.maxLeft && diffX < 0){
@@ -78,11 +84,11 @@ class ListContainer extends PureComponent {
     })
   }
 
-  handleEnd = () =>{
+  handleEnd = (isAllowChange) =>{
     let index, left, diffTime = (new Date()).getTime() - this.startTime;
 
     //快速拖动情况下切换图片
-    if(diffTime < DEDAULT_TIME_DIFF){
+    if(isAllowChange && diffTime < DEDAULT_TIME_DIFF){
       if(this.state.left < this.startLeft){
         index = this.props.index + 1;
       } else{
