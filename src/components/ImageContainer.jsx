@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 
 import raf from 'raf';
 import tween from './tween.js'
+import Loading from './Loading'
 
 /**
  * 
@@ -467,7 +468,7 @@ class ImageContainer extends PureComponent {
         onTouchEnd={this.handleTouchEnd}
         style={defaultStyle}>
         {
-          isLoaded ? <img src={src} style={ImageStyle}/> : ''
+          isLoaded ? <img src={src} style={ImageStyle}/> : <Loading/>
         }
       </div>
     );
