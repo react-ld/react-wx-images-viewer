@@ -5,6 +5,7 @@ class Pointer extends PureComponent {
   static propTypes = {
     length: PropTypes.number.isRequired,
     index: PropTypes.number.isRequired,
+    changeIndex: PropTypes.func
   }
 
   render() {
@@ -12,14 +13,16 @@ class Pointer extends PureComponent {
     
     const {
       length,
+      changeIndex,
       index
     } = this.props
+
     let i = 0, items = [];
     for(i; i < length; i++){
       if(i === index){
-        items.push(<span key={i} className="pointer on"></span>);
+        items.push(<span onClick={changeIndex.bind(null, i)} key={i} className="pointer on"></span>);
       } else{
-        items.push(<span key={i} className="pointer"></span>);
+        items.push(<span onClick={changeIndex.bind(null, i)} key={i} className="pointer"></span>);
       }
     }
 

@@ -66,7 +66,7 @@ class WrapViewer extends Component {
           urls={urls}
           gap={gap}
           index={index}/>
-        <Pointer length={urls.length} index={index}/>
+        <Pointer length={urls.length} index={index} changeIndex={this.changeIndex}/>
       </div>
     );
   }

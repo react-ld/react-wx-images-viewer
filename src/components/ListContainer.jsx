@@ -40,7 +40,17 @@ class ListContainer extends PureComponent {
     this.setState({
       left: - this.perDistance * index,
     });
-  }  
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if(this.props.index !== nextProps.index){
+      this.isNeedSpring = true;
+      this.setState({
+        left: - this.perDistance * nextProps.index,
+      });
+    }
+  }
+  
   /**
    * 拖拽的缓动公式 - easeOutSine
    * Link http://easings.net/zh-cn#
