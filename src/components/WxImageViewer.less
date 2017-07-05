@@ -70,7 +70,16 @@
     border-style: solid;
     border-color: #333;
     border-bottom-color: #FFF;
+    -webkit-animation: roll 1s linear infinite;
     animation: roll 1s linear infinite;
+  }
+  @-webkit-keyframes roll{
+    from{
+      -webkit-transform: rotate(0deg);
+    }
+    to{
+      -webkit-transform: rotate(360deg);
+    }
   }
   @keyframes roll{
     from{
