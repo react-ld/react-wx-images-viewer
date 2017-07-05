@@ -60,3 +60,5 @@ typings/
 demo
 
 deploy.config.json
+
+dist
