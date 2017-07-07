@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 
 import WrapViewer from './WrapViewer';
 
-import './WxImageViewer.less';
+import './WxImageViewer.css';
 
 const renderSubtreeIntoContainer = ReactDOM.unstable_renderSubtreeIntoContainer;
 

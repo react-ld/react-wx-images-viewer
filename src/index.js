@@ -1,3 +1,3 @@
-import WxImageViewer from './components/WxImageViewer.jsx';
+import WxImageViewer from './components/WxImageViewer';
 
 export default WxImageViewer;

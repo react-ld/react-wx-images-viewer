@@ -64,8 +64,14 @@ gulp.task('publish:less', ["publish:clean"], function () {
     .pipe(gulp.dest('dist'));
 });
 
+//发布 css 文件
+gulp.task('publish:css', ["publish:clean"], function(){
+  return gulp.src('src/**/*.css')
+    .pipe(gulp.dest('dist'))
+})
+
 //打包发布 npm
-gulp.task('publish', ["publish:clean", 'publish:js', 'publish:less']);
+gulp.task('publish', ["publish:clean", 'publish:js', 'publish:css']);
 
 gulp.task('demo', ['deploy:demo']);
 
