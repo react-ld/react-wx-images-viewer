@@ -2,7 +2,7 @@
   "name": "react-wx-images-viewer",
   "version": "0.0.1",
   "description": "Images viewer is a react component use in mobile website App, that function same as Weixin native viewer.",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "start": "webpack-dev-server --config webpack.config.js",
     "example": "rm -rf ./demo/* & NODE_ENV=development webpack --config webpack.config.example.js",
