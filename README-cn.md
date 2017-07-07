@@ -1,4 +1,4 @@
-# [English]()
+# [English](https://github.com/react-ld/react-wx-images-viewer/tree/master)
 
 # 描述
 [react-wx-images-viewer](https://github.com/react-ld/react-wx-images-viewer/tree/master)是一个通用型的移动端图片浏览 React 组件。主要功能仿照微信图片浏览功能开发。支持单指左右滑动切换图片，双指拖拽放大缩小图片。

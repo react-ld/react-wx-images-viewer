@@ -1,4 +1,4 @@
-# [中文文档]()
+# [中文文档](https://github.com/react-ld/react-wx-images-viewer/blob/master/README-cn.md)
 
 # Description
 [react-wx-images-viewer](https://github.com/react-ld/react-wx-images-viewer/tree/master) is a React
