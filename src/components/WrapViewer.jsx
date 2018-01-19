@@ -53,10 +53,10 @@ class WrapViewer extends Component {
       index
     } = this.state
 
-    defaultStyle.zIndex = zIndex;
+    // defaultStyle.zIndex = zIndex;
 
     return (
-      <div className="wx-image-viewer" style={defaultStyle}>{/* root */}
+      <div className="wx-image-viewer" style={{zIndex}}>{/* root */}
         <div className="viewer-cover"></div>
         <ListContainer
           maxZoomNum={maxZoomNum}

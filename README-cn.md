@@ -5,6 +5,10 @@
 
 通过 ReactDOM 在 body 根级创建独立的 div 进行渲染，参考 [react-modal](https://github.com/reactjs/react-modal) 使用 ReactDOM.unstable_renderSubtreeIntoContainer 进行渲染
 
+# 依赖关系
+version 0.0.1 -> React ^15.5.4
+version 1.0.0 -> React ^16.0.0
+
 # 示例
 - [demo1](https://react-ld.github.io/react-wx-images-viewer/index.html)
 
