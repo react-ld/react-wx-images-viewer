@@ -18,7 +18,7 @@ class WxImageViewer extends Component {
     gap: PropTypes.number.isRequired,            //间隙
     onClose: PropTypes.func.isRequired,          //关闭组件回调
   }
-  
+
   static childContextTypes = {
     onClose: PropTypes.func
   };
@@ -30,42 +30,30 @@ class WxImageViewer extends Component {
     gap: 10,
   }
 
-  componentDidMount() {
+  constructor(props) {
+    super(props);
     this.node = document.createElement('div');
+  }
 
+  componentDidMount() {
     document.body.appendChild(this.node);
-    this.renderPortal(this.props);
   }
 
-  componentWillReceiveProps(nextProps) {
-    console.info('WxImageViewer componentWillReceiveProps');
-
-    this.renderPortal(nextProps);
-  }
-  
   componentWillUnmount() {
-    this.removePortal();
+    document.body.removeChild(this.node);
   }
 
   getChildContext() {
-    return {onClose: this.props.onClose};
-  }
-
-  removePortal(){
-    ReactDOM.unmountComponentAtNode(this.node);
-
-    document.body.removeChild(this.node);
-  }
-  
-  renderPortal(props){
-    this.portal = renderSubtreeIntoContainer(this,
-      <WrapViewer
-        {...props}
-      />, this.node);
+    return { onClose: this.props.onClose };
   }
 
   render() {
-    return null;
+    return ReactDOM.createPortal(
+      <WrapViewer
+        {...this.props}
+      />,
+      this.node,
+    );
   }
 }
 
