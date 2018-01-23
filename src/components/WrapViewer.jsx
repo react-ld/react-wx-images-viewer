@@ -33,13 +33,13 @@ class WrapViewer extends Component {
     })
   }
 
-  changeIndex = (index)=>{
-    console.info("changeIndex index = ",index);
+  changeIndex = (index) => {
+    console.info("changeIndex index = ", index);
     this.setState({
       index
     })
   }
-  
+
   render() {
     const {
       maxZoomNum,
@@ -56,7 +56,7 @@ class WrapViewer extends Component {
     // defaultStyle.zIndex = zIndex;
 
     return (
-      <div className="wx-image-viewer" style={{zIndex}}>{/* root */}
+      <div className="wx-image-viewer" style={{ zIndex }}>{/* root */}
         <div className="viewer-cover"></div>
         <ListContainer
           maxZoomNum={maxZoomNum}
@@ -65,8 +65,8 @@ class WrapViewer extends Component {
           changeIndex={this.changeIndex}
           urls={urls}
           gap={gap}
-          index={index}/>
-        <Pointer length={urls.length} index={index} changeIndex={this.changeIndex}/>
+          index={index} />
+        <Pointer length={urls.length} index={index} changeIndex={this.changeIndex} />
       </div>
     );
   }

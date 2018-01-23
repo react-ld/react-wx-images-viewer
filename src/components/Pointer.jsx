@@ -10,7 +10,7 @@ class Pointer extends PureComponent {
 
   render() {
     console.info("Point render")
-    
+
     const {
       length,
       changeIndex,
@@ -18,10 +18,10 @@ class Pointer extends PureComponent {
     } = this.props
 
     let i = 0, items = [];
-    for(i; i < length; i++){
-      if(i === index){
+    for (i; i < length; i++) {
+      if (i === index) {
         items.push(<span onClick={changeIndex.bind(null, i)} key={i} className="pointer on"></span>);
-      } else{
+      } else {
         items.push(<span onClick={changeIndex.bind(null, i)} key={i} className="pointer"></span>);
       }
     }

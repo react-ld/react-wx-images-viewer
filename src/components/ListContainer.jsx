@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import {Motion, spring} from 'react-motion';
+import { Motion, spring } from 'react-motion';
 
 import ImageContainer from './ImageContainer'
 
@@ -18,7 +18,7 @@ class ListContainer extends PureComponent {
     left: 0,
   }
 
-  constructor(){
+  constructor() {
     super();
     this.isNeedSpring = false;
   }
@@ -43,14 +43,14 @@ class ListContainer extends PureComponent {
   }
 
   componentWillReceiveProps(nextProps) {
-    if(this.props.index !== nextProps.index){
+    if (this.props.index !== nextProps.index) {
       this.isNeedSpring = true;
       this.setState({
         left: - this.perDistance * nextProps.index,
       });
     }
   }
-  
+
   /**
    * 拖拽的缓动公式 - easeOutSine
    * Link http://easings.net/zh-cn#
@@ -68,24 +68,24 @@ class ListContainer extends PureComponent {
     return c * Math.sin(t / d * (Math.PI / 2)) + b;
   }
 
-  handleStart = () =>{
+  handleStart = () => {
     // console.info("ListContainer handleStart")
     this.startLeft = this.state.left;
     this.startTime = (new Date()).getTime();
     this.isNeedSpring = false;
   }
 
-  handleMove = (diffX) =>{
+  handleMove = (diffX) => {
     // console.info("ListContainer handleStart diffX = %s",diffX);
     //限制最大 diffx 值
-    if(Math.abs(diffX) > this.props.screenWidth){
-      if(diffX < 0){diffX = - this.props.screenWidth}
-      if(diffX > 0){diffX = this.props.screenWidth}
+    if (Math.abs(diffX) > this.props.screenWidth) {
+      if (diffX < 0) { diffX = - this.props.screenWidth }
+      if (diffX > 0) { diffX = this.props.screenWidth }
     }
 
-    if(this.state.left >= 0 && diffX > 0){
+    if (this.state.left >= 0 && diffX > 0) {
       diffX = this.easing(diffX);
-    } else if(this.state.left <= - this.maxLeft && diffX < 0){
+    } else if (this.state.left <= - this.maxLeft && diffX < 0) {
       diffX = -this.easing(-diffX);
     }
 
@@ -94,23 +94,23 @@ class ListContainer extends PureComponent {
     })
   }
 
-  handleEnd = (isAllowChange) =>{
+  handleEnd = (isAllowChange) => {
     let index, left, diffTime = (new Date()).getTime() - this.startTime;
 
     //快速拖动情况下切换图片
-    if(isAllowChange && diffTime < DEDAULT_TIME_DIFF){
-      if(this.state.left < this.startLeft){
+    if (isAllowChange && diffTime < DEDAULT_TIME_DIFF) {
+      if (this.state.left < this.startLeft) {
         index = this.props.index + 1;
-      } else{
+      } else {
         index = this.props.index - 1;
       }
-    } else{
+    } else {
       index = Math.abs(Math.round(this.state.left / this.perDistance));
     }
 
     //处理边界情况
-    if(index < 0){ index = 0}
-    else if(index > this.length - 1){ index = this.length - 1}
+    if (index < 0) { index = 0 }
+    else if (index > this.length - 1) { index = this.length - 1 }
 
     this.setState({
       left: - this.perDistance * index,
@@ -134,30 +134,30 @@ class ListContainer extends PureComponent {
     } = this.state
 
     return (
-      <Motion style={{x: this.isNeedSpring ? spring( left) : left}}>
+      <Motion style={{ x: this.isNeedSpring ? spring(left) : left }}>
         {
-          ({x}) => {
+          ({ x }) => {
             let defaultStyle = {
               WebkitTransform: `translate3d(${x}px, 0, 0)`,
               transform: `translate3d(${x}px, 0, 0)`,
             }
 
             return (
-              <div 
+              <div
                 className="viewer-list-container"
                 style={defaultStyle}
-                >
-                { 
-                  urls.map((item,i) => <ImageContainer
-                  key={i}
-                  src={item}
-                  maxZoomNum={maxZoomNum}
-                  handleStart={this.handleStart}
-                  handleMove={this.handleMove}
-                  handleEnd={this.handleEnd}
-                  left={this.perDistance * i}
-                  screenWidth={screenWidth}
-                  screenHeight={screenHeight}/>)
+              >
+                {
+                  urls.map((item, i) => <ImageContainer
+                    key={i}
+                    src={item}
+                    maxZoomNum={maxZoomNum}
+                    handleStart={this.handleStart}
+                    handleMove={this.handleMove}
+                    handleEnd={this.handleEnd}
+                    left={this.perDistance * i}
+                    screenWidth={screenWidth}
+                    screenHeight={screenHeight} />)
                 }
               </div>
             )
