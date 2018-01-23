@@ -85,7 +85,7 @@ class ImageContainer extends PureComponent {
     this._touchZoomDistanceStart = 0; //用于记录双指距离
 
     this.animationID = 0;
-    this.animateCurTime = 0;
+    this.animateStartTime = 0;
     this.animateStartValue = {
       x: 0,
       y: 0,
@@ -325,7 +325,7 @@ class ImageContainer extends PureComponent {
             x,
             y,
           }
-          this.animateCurTime = 0;
+          this.animateStartTime = Date.now();
           this.startAnimate();
         }
       }
@@ -334,18 +334,12 @@ class ImageContainer extends PureComponent {
 
   startAnimate = () =>{
     this.animationID = raf(() => {
-      let left = tween.easeOutQuart(this.animateCurTime, this.animateStartValue.x, this.animateFinalValue.x, maxAnimateTime),
-        top = tween.easeOutQuart(this.animateCurTime, this.animateStartValue.y, this.animateFinalValue.y, maxAnimateTime);
+      // calculate current time
+      let curTime = Date.now() - this.animateStartTime;
+      let left, top;
 
-      this.setState({
-        left,
-        top
-      })
-      //add Time 
-      this.animateCurTime += msPerFrame;
-      // console.info("startAnimate left= %s, top = %s, this.animateCurTime = %s", left, top, this.animateCurTime);
-      //animate complete
-      if(this.animateCurTime > maxAnimateTime){
+      // animate complete
+      if(curTime > maxAnimateTime){
         this.setState((prevState, props) =>{
           left = setScope(prevState.left, this.originWidth - prevState.width, 0);
 
@@ -359,8 +353,16 @@ class ImageContainer extends PureComponent {
             left,
             top
           }
-        })
+        });
       } else{
+        left = tween.easeOutQuart(curTime, this.animateStartValue.x, this.animateFinalValue.x, maxAnimateTime),
+        top = tween.easeOutQuart(curTime, this.animateStartValue.y, this.animateFinalValue.y, maxAnimateTime);
+
+        // console.info("startAnimate left= %s, top = %s, curTime = %s", left, top, curTime);
+        this.setState({
+          left,
+          top
+        })
         this.startAnimate();
       }
     })
