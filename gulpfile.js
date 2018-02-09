@@ -76,3 +76,5 @@ gulp.task('publish', ["publish:clean", 'publish:js', 'publish:css']);
 gulp.task('demo', ['deploy:demo']);
 
 gulp.task('gh-pages', ['deploy:gh-pages']);
+
+gulp.task('release', ['publish', 'gh-pages']);
