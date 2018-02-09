@@ -84,6 +84,10 @@ class ImageContainer extends PureComponent {
     this.oldPointTop = 0;//计算手指中间点在图片上的位置（坐标值）
     this._touchZoomDistanceStart = 0; //用于记录双指距离
 
+
+    this.diffX = 0;// 记录最后 move 事件 移动距离
+    this.diffY = 0;// 记录最后 move 事件 移动距离
+
     this.animationID = 0;
     this.animateStartTime = 0;
     this.animateStartValue = {
@@ -118,6 +122,8 @@ class ImageContainer extends PureComponent {
         let targetEvent = event.touches[0];
         this.startX = targetEvent.clientX;
         this.startY = targetEvent.clientY;
+        this.diffX = 0;
+        this.diffY = 0;
 
         this.startLeft = this.state.left;
         this.startTop = this.state.top;
@@ -168,6 +174,7 @@ class ImageContainer extends PureComponent {
         
         this.diffX = diffX;
         this.diffY = diffY;
+        console.info('move diffy = %s', this.diffY);
         //判断是否移动
         if(Math.abs(diffX) > 5 || Math.abs(diffY) > 5){
           this.isTap = false;
@@ -254,6 +261,8 @@ class ImageContainer extends PureComponent {
         let targetEvent = event.touches[0];
         this.startX = targetEvent.clientX;
         this.startY = targetEvent.clientY;
+        this.diffX = 0;
+        this.diffY = 0;
       }
 
       this.setState((prevState, props) => {
@@ -292,7 +301,7 @@ class ImageContainer extends PureComponent {
         diffy = this.diffY;
         // diffx = this.state.left - this.startLeft,
         // diffy = this.state.top - this.startTop;
-        console.info("diffx = %s, diffy = %s", diffx, diffy);
+        console.info("diffTime = %s, diffx = %s, diffy = %s", diffTime, diffx, diffy);
       if(diffTime < 100 && this.isTap){
         this.context.onClose();
       } else{

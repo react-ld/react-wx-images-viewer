@@ -12,7 +12,8 @@ npm install --save react-wx-images-viewer
 
 # dependence
 version 0.0.1 -> React ^15.5.4
-version 1.0.0 -> React ^16.0.0
+
+version ^1.0.0 -> React ^16.0.0
 
 # Example
 - [demo1](https://react-ld.github.io/react-wx-images-viewer/index.html)

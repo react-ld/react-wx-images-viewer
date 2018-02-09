@@ -1,6 +1,6 @@
 {
   "name": "react-wx-images-viewer",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Images viewer is a react component use in mobile website App, that function same as Weixin native viewer.",
   "main": "dist/index.js",
   "scripts": {
