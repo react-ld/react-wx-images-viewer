@@ -1,21 +1,23 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { Motion, spring } from 'react-motion';
 
 import ImageContainer from './ImageContainer'
 
 //快速拖动时间限制
-const DEDAULT_TIME_DIFF = 200;
+const DEFAULT_TIME_DIFF = 200;
+const DEFAULT_SPEED = 300; // in ms
 
 class ListContainer extends PureComponent {
   static propTypes = {
     maxZoomNum: PropTypes.number.isRequired,
     changeIndex: PropTypes.func.isRequired,
     gap: PropTypes.number.isRequired,
+    speed: PropTypes.number, // Duration of transition between slides (in ms)
   }
 
   state = {
     left: 0,
+    speed: DEFAULT_SPEED
   }
 
   constructor() {
@@ -29,7 +31,8 @@ class ListContainer extends PureComponent {
       urls,
       index,
       changeIndex,
-      gap
+      gap,
+      speed
     } = this.props;
 
     this.length = urls.length;
@@ -39,6 +42,7 @@ class ListContainer extends PureComponent {
 
     this.setState({
       left: - this.perDistance * index,
+      speed: speed || DEFAULT_SPEED
     });
   }
 
@@ -98,7 +102,7 @@ class ListContainer extends PureComponent {
     let index, left, diffTime = (new Date()).getTime() - this.startTime;
 
     //快速拖动情况下切换图片
-    if (isAllowChange && diffTime < DEDAULT_TIME_DIFF) {
+    if (isAllowChange && diffTime < DEFAULT_TIME_DIFF) {
       if (this.state.left < this.startLeft) {
         index = this.props.index + 1;
       } else {
@@ -131,39 +135,38 @@ class ListContainer extends PureComponent {
 
     const {
       left,
-    } = this.state
+      speed
+    } = this.state;
+
+    const defaultStyle = {};
+
+    if(this.isNeedSpring){
+      const duration = `${speed}ms`;
+      defaultStyle.WebkitTransitionDuration = duration;
+      defaultStyle.transitionDuration = duration;
+    }
+    const translate = `translate3d(${left}px, 0, 0)`
+    defaultStyle.WebkitTransform = translate;
+    defaultStyle.transform = translate;
 
     return (
-      <Motion style={{ x: this.isNeedSpring ? spring(left) : left }}>
+      <div
+        className="viewer-list-container"
+        style={defaultStyle}
+      >
         {
-          ({ x }) => {
-            let defaultStyle = {
-              WebkitTransform: `translate3d(${x}px, 0, 0)`,
-              transform: `translate3d(${x}px, 0, 0)`,
-            }
-
-            return (
-              <div
-                className="viewer-list-container"
-                style={defaultStyle}
-              >
-                {
-                  urls.map((item, i) => <ImageContainer
-                    key={i}
-                    src={item}
-                    maxZoomNum={maxZoomNum}
-                    handleStart={this.handleStart}
-                    handleMove={this.handleMove}
-                    handleEnd={this.handleEnd}
-                    left={this.perDistance * i}
-                    screenWidth={screenWidth}
-                    screenHeight={screenHeight} />)
-                }
-              </div>
-            )
-          }
+          urls.map((item, i) => <ImageContainer
+            key={i}
+            src={item}
+            maxZoomNum={maxZoomNum}
+            handleStart={this.handleStart}
+            handleMove={this.handleMove}
+            handleEnd={this.handleEnd}
+            left={this.perDistance * i}
+            screenWidth={screenWidth}
+            screenHeight={screenHeight} />)
         }
-      </Motion>
+      </div>
     );
   }
 }
