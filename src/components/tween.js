@@ -1,3 +1,4 @@
+/* eslint-disable */
 'use strict';
 /**
  * t: current time（当前时间）；

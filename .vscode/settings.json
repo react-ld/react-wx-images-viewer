@@ -1,0 +1,9 @@
+{
+  "eslint.autoFixOnSave": true,
+  "files.autoSave": "off",
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact"
+  ],
+  "javascript.implicitProjectConfig.experimentalDecorators": true
+}

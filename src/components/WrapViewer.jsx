@@ -2,25 +2,23 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import ListContainer from './ListContainer';
-import Pointer from './Pointer'
-
-let defaultStyle = {}
+import Pointer from './Pointer';
 
 const screenWidth = document && document.documentElement.clientWidth;
 const screenHeight = document && document.documentElement.clientHeight;
 
 class WrapViewer extends Component {
-
   static propTypes = {
-    maxZoomNum: PropTypes.number.isRequired,     //最大放大倍数
-    zIndex: PropTypes.number.isRequired,         //组件图层深度
-    index: PropTypes.number.isRequired,          // 当前显示图片的http链接
-    urls: PropTypes.array.isRequired,            // 需要预览的图片http链接列表
-    gap: PropTypes.number.isRequired,            //间隙
+    index: PropTypes.number.isRequired, // 当前显示图片的http链接
+    urls: PropTypes.array.isRequired, // 需要预览的图片http链接列表
+    maxZoomNum: PropTypes.number.isRequired, // 最大放大倍数
+    zIndex: PropTypes.number.isRequired, // 组件图层深度
+    gap: PropTypes.number.isRequired, // 间隙
+    speed: PropTypes.number.isRequired, // Duration of transition between slides (in ms)
   }
 
   state = {
-    index: 0
+    index: 0,
   }
 
   componentWillMount() {
@@ -29,43 +27,41 @@ class WrapViewer extends Component {
     } = this.props;
 
     this.setState({
-      index
-    })
+      index,
+    });
   }
 
   changeIndex = (index) => {
-    console.info("changeIndex index = ", index);
+    console.info('changeIndex index = ', index);
     this.setState({
-      index
-    })
+      index,
+    });
   }
 
   render() {
     const {
-      maxZoomNum,
       zIndex,
       urls,
-      onClose,
-      gap
-    } = this.props
+      ...reset
+    } = this.props;
 
     const {
-      index
-    } = this.state
+      index,
+    } = this.state;
 
     // defaultStyle.zIndex = zIndex;
 
     return (
       <div className="wx-image-viewer" style={{ zIndex }}>{/* root */}
-        <div className="viewer-cover"></div>
+        <div className="viewer-cover" />
         <ListContainer
-          maxZoomNum={maxZoomNum}
           screenWidth={screenWidth}
           screenHeight={screenHeight}
           changeIndex={this.changeIndex}
+          index={index}
           urls={urls}
-          gap={gap}
-          index={index} />
+          {...reset}
+        />
         <Pointer length={urls.length} index={index} changeIndex={this.changeIndex} />
       </div>
     );

@@ -6,21 +6,19 @@ import WrapViewer from './WrapViewer';
 
 import './WxImageViewer.css';
 
-const renderSubtreeIntoContainer = ReactDOM.unstable_renderSubtreeIntoContainer;
-
 class WxImageViewer extends Component {
-
   static propTypes = {
-    maxZoomNum: PropTypes.number.isRequired,     //最大放大倍数
-    zIndex: PropTypes.number.isRequired,         //组件图层深度
-    index: PropTypes.number.isRequired,          // 当前显示图片的http链接
-    urls: PropTypes.array.isRequired,            // 需要预览的图片http链接列表
-    gap: PropTypes.number.isRequired,            //间隙
-    onClose: PropTypes.func.isRequired,          //关闭组件回调
+    maxZoomNum: PropTypes.number, // 最大放大倍数
+    zIndex: PropTypes.number, // 组件图层深度
+    index: PropTypes.number, // 当前显示图片的http链接
+    urls: PropTypes.array.isRequired, // 需要预览的图片http链接列表
+    gap: PropTypes.number, // 间隙
+    speed: PropTypes.number, // Duration of transition between slides (in ms)
+    onClose: PropTypes.func.isRequired, // 关闭组件回调
   }
 
   static childContextTypes = {
-    onClose: PropTypes.func
+    onClose: PropTypes.func,
   };
 
   static defaultProps = {
@@ -28,11 +26,16 @@ class WxImageViewer extends Component {
     zIndex: 100,
     index: 0,
     gap: 10,
+    speed: 300,
   }
 
   constructor(props) {
     super(props);
     this.node = document.createElement('div');
+  }
+
+  getChildContext() {
+    return { onClose: this.props.onClose };
   }
 
   componentDidMount() {
@@ -41,10 +44,6 @@ class WxImageViewer extends Component {
 
   componentWillUnmount() {
     document.body.removeChild(this.node);
-  }
-
-  getChildContext() {
-    return { onClose: this.props.onClose };
   }
 
   render() {

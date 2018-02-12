@@ -1,23 +1,17 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
-import ImageContainer from './ImageContainer'
+import ImageContainer from './ImageContainer';
 
-//快速拖动时间限制
+// 快速拖动时间限制
 const DEFAULT_TIME_DIFF = 200;
-const DEFAULT_SPEED = 300; // in ms
 
 class ListContainer extends PureComponent {
   static propTypes = {
     maxZoomNum: PropTypes.number.isRequired,
     changeIndex: PropTypes.func.isRequired,
     gap: PropTypes.number.isRequired,
-    speed: PropTypes.number, // Duration of transition between slides (in ms)
-  }
-
-  state = {
-    left: 0,
-    speed: DEFAULT_SPEED
+    speed: PropTypes.number.isRequired, // Duration of transition between slides (in ms)
   }
 
   constructor() {
@@ -25,14 +19,16 @@ class ListContainer extends PureComponent {
     this.isNeedSpring = false;
   }
 
+  state = {
+    left: 0,
+  }
+
   componentWillMount() {
     const {
       screenWidth,
       urls,
       index,
-      changeIndex,
       gap,
-      speed
     } = this.props;
 
     this.length = urls.length;
@@ -41,8 +37,7 @@ class ListContainer extends PureComponent {
     this.isNeedSpring = false;
 
     this.setState({
-      left: - this.perDistance * index,
-      speed: speed || DEFAULT_SPEED
+      left: -this.perDistance * index,
     });
   }
 
@@ -50,7 +45,7 @@ class ListContainer extends PureComponent {
     if (this.props.index !== nextProps.index) {
       this.isNeedSpring = true;
       this.setState({
-        left: - this.perDistance * nextProps.index,
+        left: -this.perDistance * nextProps.index,
       });
     }
   }
@@ -64,12 +59,12 @@ class ListContainer extends PureComponent {
    * d: duration（持续时间）。
    */
   easing = (distance) => {
-    var t = distance;
-    var b = 0;
-    var d = this.props.screenWidth; // 允许拖拽的最大距离
-    var c = d / 2.5; // 提示标签最大有效拖拽距离
+    const t = distance;
+    const b = 0;
+    const d = this.props.screenWidth; // 允许拖拽的最大距离
+    const c = d / 2.5; // 提示标签最大有效拖拽距离
 
-    return c * Math.sin(t / d * (Math.PI / 2)) + b;
+    return (c * Math.sin((t / d) * (Math.PI / 2))) + b;
   }
 
   handleStart = () => {
@@ -81,27 +76,29 @@ class ListContainer extends PureComponent {
 
   handleMove = (diffX) => {
     // console.info("ListContainer handleStart diffX = %s",diffX);
-    //限制最大 diffx 值
-    if (Math.abs(diffX) > this.props.screenWidth) {
-      if (diffX < 0) { diffX = - this.props.screenWidth }
-      if (diffX > 0) { diffX = this.props.screenWidth }
+    let nDiffx = diffX;
+    // 限制最大 diffx 值
+    if (Math.abs(nDiffx) > this.props.screenWidth) {
+      if (nDiffx < 0) { nDiffx = -this.props.screenWidth; }
+      if (nDiffx > 0) { nDiffx = this.props.screenWidth; }
     }
 
-    if (this.state.left >= 0 && diffX > 0) {
-      diffX = this.easing(diffX);
-    } else if (this.state.left <= - this.maxLeft && diffX < 0) {
-      diffX = -this.easing(-diffX);
+    if (this.state.left >= 0 && nDiffx > 0) {
+      nDiffx = this.easing(nDiffx);
+    } else if (this.state.left <= -this.maxLeft && nDiffx < 0) {
+      nDiffx = -this.easing(-nDiffx);
     }
 
     this.setState({
-      left: this.startLeft + diffX,
-    })
+      left: this.startLeft + nDiffx,
+    });
   }
 
   handleEnd = (isAllowChange) => {
-    let index, left, diffTime = (new Date()).getTime() - this.startTime;
+    let index;
+    const diffTime = (new Date()).getTime() - this.startTime;
 
-    //快速拖动情况下切换图片
+    // 快速拖动情况下切换图片
     if (isAllowChange && diffTime < DEFAULT_TIME_DIFF) {
       if (this.state.left < this.startLeft) {
         index = this.props.index + 1;
@@ -112,13 +109,12 @@ class ListContainer extends PureComponent {
       index = Math.abs(Math.round(this.state.left / this.perDistance));
     }
 
-    //处理边界情况
-    if (index < 0) { index = 0 }
-    else if (index > this.length - 1) { index = this.length - 1 }
+    // 处理边界情况
+    if (index < 0) { index = 0; } else if (index > this.length - 1) { index = this.length - 1; }
 
     this.setState({
-      left: - this.perDistance * index,
-    })
+      left: -this.perDistance * index,
+    });
     this.isNeedSpring = true;
     this.props.changeIndex(index);
   }
@@ -128,24 +124,22 @@ class ListContainer extends PureComponent {
       maxZoomNum,
       screenWidth,
       screenHeight,
-      index,
       urls,
-      gap
+      speed,
     } = this.props;
 
     const {
       left,
-      speed
     } = this.state;
 
     const defaultStyle = {};
 
-    if(this.isNeedSpring){
+    if (this.isNeedSpring) {
       const duration = `${speed}ms`;
       defaultStyle.WebkitTransitionDuration = duration;
       defaultStyle.transitionDuration = duration;
     }
-    const translate = `translate3d(${left}px, 0, 0)`
+    const translate = `translate3d(${left}px, 0, 0)`;
     defaultStyle.WebkitTransform = translate;
     defaultStyle.transform = translate;
 
@@ -155,16 +149,19 @@ class ListContainer extends PureComponent {
         style={defaultStyle}
       >
         {
-          urls.map((item, i) => <ImageContainer
-            key={i}
-            src={item}
-            maxZoomNum={maxZoomNum}
-            handleStart={this.handleStart}
-            handleMove={this.handleMove}
-            handleEnd={this.handleEnd}
-            left={this.perDistance * i}
-            screenWidth={screenWidth}
-            screenHeight={screenHeight} />)
+          urls.map((item, i) => (
+            <ImageContainer
+              key={i} // eslint-disable-line
+              src={item}
+              maxZoomNum={maxZoomNum}
+              handleStart={this.handleStart}
+              handleMove={this.handleMove}
+              handleEnd={this.handleEnd}
+              left={this.perDistance * i}
+              screenWidth={screenWidth}
+              screenHeight={screenHeight}
+            />
+          ))
         }
       </div>
     );

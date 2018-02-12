@@ -64,3 +64,5 @@ deploy.config.json
 dist
 
 .publish
+
+package-lock.json
