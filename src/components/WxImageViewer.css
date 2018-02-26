@@ -34,6 +34,17 @@
 }
 .wx-image-viewer .viewer-image-container img {
   position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: left top;
+  -webkit-transform-origin: left top;
+  -moz-transform-origin: left top;
+  -o-transform-origin: left top;
+  -webkit-transition-property: -webkit-transform;
+  transition-property: -webkit-transform;
+  -o-transition-property: transform;
+  transition-property: transform;
+  transition-property: transform,-webkit-transform;
 }
 .wx-image-viewer .viewer-image-pointer {
   position: fixed;

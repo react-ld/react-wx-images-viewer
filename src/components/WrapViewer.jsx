@@ -42,14 +42,14 @@ class WrapViewer extends Component {
     const {
       zIndex,
       urls,
-      ...reset
+      maxZoomNum,
+      gap,
+      speed,
     } = this.props;
 
     const {
       index,
     } = this.state;
-
-    // defaultStyle.zIndex = zIndex;
 
     return (
       <div className="wx-image-viewer" style={{ zIndex }}>{/* root */}
@@ -58,9 +58,11 @@ class WrapViewer extends Component {
           screenWidth={screenWidth}
           screenHeight={screenHeight}
           changeIndex={this.changeIndex}
-          index={index}
           urls={urls}
-          {...reset}
+          maxZoomNum={maxZoomNum}
+          gap={gap}
+          speed={speed}
+          index={index}
         />
         <Pointer length={urls.length} index={index} changeIndex={this.changeIndex} />
       </div>

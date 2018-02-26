@@ -19,8 +19,21 @@ function setScope(value, min, max) {
   return value;
 }
 
+
+function getDistanceBetweenTouches(e) {
+  if (e.touches.length < 2) return 1;
+  const x1 = e.touches[0].clientX;
+  const y1 = e.touches[0].clientY;
+  const x2 = e.touches[1].clientX;
+  const y2 = e.touches[1].clientY;
+  const distance = Math.sqrt(((x2 - x1) ** 2) + ((y2 - y1) ** 2));
+  return distance;
+}
+
 // const msPerFrame = 1000 / 60;
 const maxAnimateTime = 1000;
+const minTapMoveValue = 5;
+const maxTapTimeValue = 300;
 
 /**
  * 图片默认展示模式：宽度等于屏幕宽度，高度等比缩放；水平居中，垂直居中或者居顶（当高度大于屏幕高度时）
@@ -66,19 +79,19 @@ class ImageContainer extends PureComponent {
 
     this.originHeight = 0; // 图片默认展示模式下高度
     this.originWidth = 0; // 图片默认展示模式下宽度
+    this.originScale = 1; // 图片初始缩放比例
 
-    this.startHeight = 0; // 开始触摸操作时的高度
-    this.startWidth = 0; // 开始触摸操作时的宽度
     this.startLeft = 0; // 开始触摸操作时的 left 值
     this.startTop = 0; // 开始触摸操作时的 top 值
+    this.startScale = 1; // 开始缩放操作时的 scale 值
 
     this.onTouchStartTime = 0; // 单指触摸开始时间
-    this.isTap = false; // 是否为 Tap 事件
 
     this.isTwoFingerMode = false; // 是否为双指模式
     this.oldPointLeft = 0;// 计算手指中间点在图片上的位置（坐标值）
     this.oldPointTop = 0;// 计算手指中间点在图片上的位置（坐标值）
     this._touchZoomDistanceStart = 0; // 用于记录双指距离
+    this.haveCallMoveFn = false;
 
 
     this.diffX = 0;// 记录最后 move 事件 移动距离
@@ -99,9 +112,9 @@ class ImageContainer extends PureComponent {
   state = {
     width: 0,
     height: 0,
+    scale: 1,
     left: 0,
     top: 0,
-    isLoading: false,
     isLoaded: false,
   }
 
@@ -130,6 +143,7 @@ class ImageContainer extends PureComponent {
 
     this.originWidth = screenWidth;
     this.originHeight = (this.actualHeight / this.actualWith) * screenWidth;
+    this.originScale = 1;
 
     if (this.actualHeight / this.actualWith < screenHeight / screenWidth) {
       top = parseInt((screenHeight - this.originHeight) / 2, 10);
@@ -139,16 +153,15 @@ class ImageContainer extends PureComponent {
     this.setState({
       width: this.originWidth,
       height: this.originHeight,
+      scale: 1,
       left,
       top,
-      isLoading: false,
       isLoaded: true,
     });
   }
 
   onError = () => {
     this.setState({
-      isLoading: false,
       isLoaded: true,
     });
   }
@@ -160,7 +173,6 @@ class ImageContainer extends PureComponent {
     this.img.onerror = this.onError;
 
     this.setState({
-      isLoading: true,
       isLoaded: false,
     });
   }
@@ -189,11 +201,10 @@ class ImageContainer extends PureComponent {
         this.startLeft = this.state.left;
         this.startTop = this.state.top;
 
-        // if(this.state.width === this.originWidth){
-        //   this.callHandleStart()
-        // }
+        console.info('handleTouchStart this.startX = %s, this.startY = %s, this.startLeft = %s, this.startTop = %s', this.startX, this.startY, this.startLeft, this.startTop);
+
         this.onTouchStartTime = (new Date()).getTime();
-        this.isTap = true;
+        this.haveCallMoveFn = false;
         break;
       }
       case 2: { // 两个手指
@@ -207,17 +218,13 @@ class ImageContainer extends PureComponent {
         // 保存图片初始位置和尺寸
         this.startLeft = this.state.left;
         this.startTop = this.state.top;
-        this.startWidth = this.state.width;
-        this.startHeight = this.state.height;
+        this.startScale = this.state.scale;
 
         // 计算手指中间点在图片上的位置（坐标值）
         this.oldPointLeft = middlePointClientLeft - this.startLeft;
         this.oldPointTop = middlePointClientTop - this.startTop;
 
-        const dx = event.touches[0].clientX - event.touches[1].clientX;
-        const dy = event.touches[0].clientY - event.touches[1].clientY;
-        this._touchZoomDistanceEnd = Math.sqrt((dx * dx) + (dy * dy));
-        this._touchZoomDistanceStart = this._touchZoomDistanceEnd;
+        this._touchZoomDistanceStart = getDistanceBetweenTouches(event);
         break;
       }
       default:
@@ -236,72 +243,67 @@ class ImageContainer extends PureComponent {
 
         this.diffX = diffX;
         this.diffY = diffY;
-        console.info('move diffy = %s', this.diffY);
-        // 判断是否移动
-        if (Math.abs(diffX) > 5 || Math.abs(diffY) > 5) {
-          this.isTap = false;
+        console.info('handleTouchMove one diffX=%s, diffY=%s', diffX, diffY);
+        // 判断是否为点击
+        if (Math.abs(diffX) < minTapMoveValue && Math.abs(diffY) < minTapMoveValue) {
+          return;
         }
 
-        // 图片宽度等于初始宽度，直接调用 handleMove 函数
-        if (this.state.width === this.originWidth) {
-          if (this.props.handleMove) {
-            // this.callHandleStart();
-            // this.props.handleMove(diffX);
+        const { scale, left } = this.state;
+        const width = scale * this.originWidth;
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+          // 水平移动
+          if (this.state.scale === this.originScale && Math.abs(diffX) > minTapMoveValue) {
+            this.haveCallMoveFn = true;
             this.callHandleMove(diffX);
+            return;
           }
-        } else {
-          this.setState((prevState, props) => {
-            let top = (props.screenHeight - prevState.height) / 2;
-            let left = this.startLeft + diffX;
 
-            if (prevState.height > props.screenHeight) {
-              top = setScope(this.startTop + diffY, (props.screenHeight - prevState.height), 0);
-            }
-            console.info('left = %s, this.originWidth - prevState.width = %s', left, this.originWidth - prevState.width);
-            // 存在 handleMove 函数
-            if (props.handleMove) {
-              if (left < this.originWidth - prevState.width) {
-                // this.callHandleStart();
-                // props.handleMove(left + prevState.width - this.originWidth);
-                this.callHandleMove((left + prevState.width) - this.originWidth);
-              } else if (left > 0) {
-                // this.callHandleStart();
-                // props.handleMove(left);
-                this.callHandleMove(left);
-              }
-            }
+          console.info('handleMove one left=%s, this.startLeft=%s,this.originWidth=%s, width=%s', left, this.startLeft, this.originWidth, width);
+          if (diffX < 0 && this.startLeft <= this.originWidth - width) {
+            this.haveCallMoveFn = true;
+            this.callHandleMove(diffX);
+            return;
+          }
 
-            left = setScope(left, this.originWidth - prevState.width, 0);
-
-            console.info('this.startX = %s, this.startY = %s, this.startLeft = %s, this.startTop = %s, diffX = %s, diffY = %s', this.startX, this.startY, this.startLeft, this.startTop, diffX, diffY);
-            return {
-              left,
-              top,
-            };
-          });
+          if (diffX > 0 && this.startLeft >= 0) {
+            this.haveCallMoveFn = true;
+            this.callHandleMove(diffX);
+            return;
+          }
         }
+
+        const { screenHeight } = this.props;
+        const height = scale * this.originHeight;
+        let newTop = (screenHeight - height) / 2;
+        const newLeft = this.startLeft + diffX;
+
+        if (height > screenHeight || this.state.scale === this.originScale) {
+          newTop = this.startTop + diffY;
+        }
+        console.info('handleTouchMove one newLeft=%s, newTop=%s', newLeft, newTop);
+        this.setState({
+          left: newLeft,
+          top: newTop,
+        });
 
         break;
       }
       case 2: { // 两个手指
-        const dx = event.touches[0].clientX - event.touches[1].clientX;
-        const dy = event.touches[0].clientY - event.touches[1].clientY;
-        this._touchZoomDistanceEnd = Math.sqrt((dx * dx) + (dy * dy));
+        this._touchZoomDistanceEnd = getDistanceBetweenTouches(event);
 
         const zoom = Math.sqrt(this._touchZoomDistanceEnd / this._touchZoomDistanceStart);
+        const scale = zoom * this.startScale;
 
         this.setState(() => {
           const left = this.startLeft + ((1 - zoom) * this.oldPointLeft);
           const top = this.startTop + ((1 - zoom) * this.oldPointTop);
-          const width = zoom * this.startWidth;
-          const height = zoom * this.startHeight;
 
-          console.info('zoom = %s, left = %s, top = %s, width = %s, height = %s ', zoom, left, top, width, height);
+          console.info('zoom = %s, left = %s, top = %s, scale', zoom, left, top, scale);
           return {
             left,
             top,
-            width,
-            height,
+            scale,
           };
         });
         break;
@@ -328,10 +330,10 @@ class ImageContainer extends PureComponent {
       }
 
       this.setState((prevState, props) => {
-        const width = setScope(prevState.width, this.originWidth, props.maxZoomNum * this.originWidth);
-        const height = setScope(prevState.height, this.originHeight, props.maxZoomNum * this.originHeight);
-
-        const zoom = width / this.startWidth;
+        const scale = setScope(prevState.scale, 1, props.maxZoomNum);
+        const width = scale * this.originWidth;
+        const height = scale * this.originHeight;
+        const zoom = scale / this.startScale;
         const left = setScope(this.startLeft + ((1 - zoom) * this.oldPointLeft), this.originWidth - width, 0);
 
         let top;
@@ -344,61 +346,76 @@ class ImageContainer extends PureComponent {
         if (touchLen === 1) {
           this.startLeft = left;
           this.startTop = top;
+          this.startScale = scale;
           console.info('this.startX = %s, this.startY = %s, this.startLeft = %s, this.startTop = %s', this.startX, this.startY, this.startLeft, this.startTop);
         }
 
         console.info('zoom = %s, left = %s, top = %s, width=%s, height= %s', zoom, left, top, width, height);
         return {
-          width,
-          height,
           left,
           top,
+          scale,
         };
       });
     } else { // 单指结束（ontouchend）
       const diffTime = (new Date()).getTime() - this.onTouchStartTime;
-      const diffx = this.diffX;
-      const diffy = this.diffY;
-      // diffx = this.state.left - this.startLeft,
-      // diffy = this.state.top - this.startTop;
-      console.info('diffTime = %s, diffx = %s, diffy = %s', diffTime, diffx, diffy);
-      if (diffTime < 100 && this.isTap) {
+      const { diffX, diffY } = this;
+
+      console.info('handleTouchEnd one diffTime = %s, diffX = %s, diffy = %s', diffTime, diffX, diffY);
+      // 判断为点击则关闭图片浏览组件
+      if (diffTime < maxTapTimeValue && Math.abs(diffX) < minTapMoveValue && Math.abs(diffY) < minTapMoveValue) {
         this.context.onClose();
-      } else {
-        this.callHandleEnd(diffy < 30);
+        return;
+      }
 
-        if (diffTime < maxAnimateTime / 2) {
-          let x;
-          let y;
-
-          // 使用相同速度算法
-          x = ((diffx * maxAnimateTime) / diffTime) + this.startLeft;
-          y = ((diffy * maxAnimateTime) / diffTime) + this.startTop;
-          // 使用 y = A * x + b; 其中 x = diffTime 两个点（500，1）(100, 5) 带入计算得出
-          // x = diffx * (-3/400 * diffTime + 19/4) + this.startLeft;
-          // y = diffy * (-3/400 * diffTime + 19/4) + this.startTop;
-
-          x = setScope(x, this.originWidth - this.state.width, 0);
-
-          if (this.state.height > this.props.screenHeight) {
-            y = setScope(y, this.props.screenHeight - this.state.height, 0);
-          } else {
-            y = this.state.top;
-          }
-          console.info('this.state.height = %s, screenHeight = %s,', this.state.height, this.props.screenHeight);
-          console.info('diffTime=%s, diffx = %s, diffy = %s, startLeft = %s, startTop=%s, x = %s, y = %s', diffTime, diffx, diffy, this.startLeft, this.startTop, x, y);
-          this.animateStartValue = {
-            x: this.state.left,
-            y: this.state.top,
-          };
-          this.animateFinalValue = {
-            x,
-            y,
-          };
-          this.animateStartTime = Date.now();
-          this.startAnimate();
+      // 水平移动
+      if (this.haveCallMoveFn) {
+        const isChangeImage = this.callHandleEnd(diffY < 30);
+        if (isChangeImage) { // 如果切换图片则重置当前图片状态
+          setTimeout(() => {
+            this.setState({
+              scale: this.originScale,
+              left: 0,
+              top: this.originTop,
+            });
+          }, maxAnimateTime / 3);
+          return;
         }
       }
+      console.info(Math.abs(diffY) > (this.props.screenHeight / 2), this.startTop, this.originTop);
+      if (Math.abs(diffX) < Math.abs(diffY) && Math.abs(diffY) > (this.props.screenHeight / 3) && this.startTop === this.originTop) {
+        this.context.onClose();
+        return;
+      }
+
+      let x;
+      let y;
+      const { scale } = this.state;
+      const width = scale * this.originWidth;
+      const height = scale * this.originHeight;
+
+      // 使用相同速度算法
+      x = ((diffX * maxAnimateTime) / diffTime) + this.startLeft;
+      y = ((diffY * maxAnimateTime) / diffTime) + this.startTop;
+
+      x = setScope(x, this.originWidth - width, 0);
+
+      if (height > this.props.screenHeight) {
+        y = setScope(y, this.props.screenHeight - height, 0);
+      } else {
+        y = this.state.top;
+      }
+
+      this.animateStartValue = {
+        x: this.state.left,
+        y: this.state.top,
+      };
+      this.animateFinalValue = {
+        x,
+        y,
+      };
+      this.animateStartTime = Date.now();
+      this.startAnimate();
     }
   }
 
@@ -412,12 +429,14 @@ class ImageContainer extends PureComponent {
       // animate complete
       if (curTime > maxAnimateTime) {
         this.setState((prevState, props) => {
-          left = setScope(prevState.left, this.originWidth - prevState.width, 0);
+          const width = prevState.scale * this.originWidth;
+          const height = prevState.scale * this.originHeight;
+          left = setScope(prevState.left, this.originWidth - width, 0);
 
-          if (prevState.height > props.screenHeight) {
-            top = setScope(prevState.top, props.screenHeight - prevState.height, 0);
+          if (height > props.screenHeight) {
+            top = setScope(prevState.top, props.screenHeight - height, 0);
           } else {
-            top = (props.screenHeight - prevState.height) / 2;
+            top = (props.screenHeight - height) / 2;
           }
           console.info('end animate left= %s, top = %s', left, top);
           return {
@@ -453,7 +472,7 @@ class ImageContainer extends PureComponent {
     if (this.isCalledHandleStart) {
       this.isCalledHandleStart = false;
       if (this.props.handleEnd) {
-        this.props.handleEnd(isAllowChange);
+        return this.props.handleEnd(isAllowChange);
       }
     }
   }
@@ -463,17 +482,29 @@ class ImageContainer extends PureComponent {
       screenWidth,
       screenHeight,
       src,
-      left,
+      left: divLeft,
     } = this.props;
 
     const {
       isLoaded,
-      isLoading,
-      ...ImageStyle
+      left,
+      top,
+      scale,
+      width,
+      height,
     } = this.state;
 
+    const ImageStyle = {
+      width,
+      height,
+    };
+
+    const translate = `translate3d(${left}px, ${top}px, 0) scale(${scale})`;
+    ImageStyle.WebkitTransform = translate;
+    ImageStyle.transform = translate;
+
     const defaultStyle = {
-      left,
+      left: divLeft,
       width: screenWidth,
       height: screenHeight,
     };
