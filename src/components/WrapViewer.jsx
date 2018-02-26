@@ -6,8 +6,8 @@ import Pointer from './Pointer'
 
 let defaultStyle = {}
 
-const screenWidth = document && document.documentElement.clientWidth;
-const screenHeight = document && document.documentElement.clientHeight;
+const screenWidth  = typeof document !=='undefined' && document.documentElement.clientWidth;
+const screenHeight = typeof document !=='undefined' && document.documentElement.clientHeight;
 
 class WrapViewer extends Component {
 
