@@ -4,8 +4,8 @@ import PropTypes from 'prop-types';
 import ListContainer from './ListContainer';
 import Pointer from './Pointer';
 
-const screenWidth  = typeof document !=='undefined' && document.documentElement.clientWidth;
-const screenHeight = typeof document !=='undefined' && document.documentElement.clientHeight;
+const screenWidth = typeof document !== 'undefined' && document.documentElement.clientWidth;
+const screenHeight = typeof document !== 'undefined' && document.documentElement.clientHeight;
 
 class WrapViewer extends Component {
   static propTypes = {
