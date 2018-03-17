@@ -1,6 +1,6 @@
 {
   "name": "react-wx-images-viewer",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Images viewer is a react component use in mobile website App, that function same as Weixin native viewer.",
   "main": "dist/index.js",
   "scripts": {
@@ -44,7 +44,7 @@
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
     "gulp-clean": "^0.3.2",
-    "gulp-gh-pages": "^0.5.4",
+    "gulp-gh-pages-will": "^0.5.4",
     "gulp-less": "^3.3.2",
     "gulp-util": "^3.0.8",
     "html-webpack-plugin": "^2.28.0",
@@ -55,13 +55,13 @@
     "url-loader": "^0.5.8",
     "vinyl-ftp": "^0.6.0",
     "webpack": "^2.6.1",
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0",
+    "react-hot-loader": "^3.0.0-beta.7",
     "webpack-dev-server": "^2.4.5"
   },
   "dependencies": {
     "prop-types": "^15.6.0",
-    "react": "^16.0.0",
-    "react-dom": "^16.0.0",
-    "react-hot-loader": "^3.0.0-beta.7",
     "raf": "^3.1.0"
   }
 }

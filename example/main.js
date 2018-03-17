@@ -9,7 +9,7 @@ import App from './App.jsx';
 const render = (Component) => {
   ReactDOM.render(
     <AppContainer>
-      <Component/>
+      <Component />
     </AppContainer>,
     document.getElementById('root')
   );
@@ -20,6 +20,6 @@ render(App);
 // 模块热替换的 API
 if (module.hot) {
   module.hot.accept('./App.jsx', () => {
-    render(App)
+    render(App);
   });
 }

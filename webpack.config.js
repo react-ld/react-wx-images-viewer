@@ -2,7 +2,8 @@
 var path = require('path')
 var webpack = require('webpack')
 var HtmlWebpackPlugin = require('html-webpack-plugin');
-var port = 3010
+var port = 3010;
+var host = '0.0.0.0'
 
 module.exports = {
   context: path.resolve(__dirname, 'example'), // string（绝对路径！）
@@ -11,7 +12,7 @@ module.exports = {
   entry: [
     'react-hot-loader/patch',
     // 开启 React 代码的模块热替换(HMR)
-    'webpack-dev-server/client?http://localhost:' + port,
+    'webpack-dev-server/client?http://' + host + ':' + port,
     'webpack/hot/only-dev-server',
     './main.js'
   ],
@@ -42,7 +43,8 @@ module.exports = {
   devServer: {
     hot: true,
     // 开启服务器的模块热替换(HMR)
-    host: 'localhost',
+    // host: 'localhost',
+    host: host,
     port: port
   },
   module: {

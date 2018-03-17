@@ -382,29 +382,39 @@ class ImageContainer extends PureComponent {
           return;
         }
       }
-      console.info(Math.abs(diffY) > (this.props.screenHeight / 2), this.startTop, this.originTop);
-      if (Math.abs(diffX) < Math.abs(diffY) && Math.abs(diffY) > (this.props.screenHeight / 3) && this.startTop === this.originTop) {
-        this.context.onClose();
-        return;
-      }
+      // TODO 下拉移动距离超过屏幕高度的 1/3 则关闭
+      // console.info(Math.abs(diffY) > (this.props.screenHeight / 2), this.startTop, this.originTop);
+      // if (Math.abs(diffX) < Math.abs(diffY) && Math.abs(diffY) > (this.props.screenHeight / 3) && this.startTop === this.originTop) {
+      //   this.context.onClose();
+      //   return;
+      // }
 
       let x;
       let y;
       const { scale } = this.state;
-      const width = scale * this.originWidth;
+      // const width = scale * this.originWidth;
       const height = scale * this.originHeight;
 
       // 使用相同速度算法
       x = ((diffX * maxAnimateTime) / diffTime) + this.startLeft;
       y = ((diffY * maxAnimateTime) / diffTime) + this.startTop;
 
-      x = setScope(x, this.originWidth - width, 0);
-
-      if (height > this.props.screenHeight) {
-        y = setScope(y, this.props.screenHeight - height, 0);
-      } else {
-        y = this.state.top;
+      if (this.state.scale === this.originScale) {
+        x = 0;
+        if (height > this.props.screenHeight) {
+          y = setScope(y, this.props.screenHeight - height, 0);
+        } else {
+          y = this.originTop;
+        }
       }
+
+      // x = setScope(x, this.originWidth - width, 0);
+
+      // if (height > this.props.screenHeight) {
+      // y = setScope(y, this.props.screenHeight - height, 0);
+      // } else {
+      //   y = this.state.top;
+      // }
 
       this.animateStartValue = {
         x: this.state.left,
@@ -448,7 +458,7 @@ class ImageContainer extends PureComponent {
         left = tween.easeOutQuart(curTime, this.animateStartValue.x, this.animateFinalValue.x, maxAnimateTime);
         top = tween.easeOutQuart(curTime, this.animateStartValue.y, this.animateFinalValue.y, maxAnimateTime);
 
-        // console.info("startAnimate left= %s, top = %s, curTime = %s", left, top, curTime);
+        console.info('startAnimate left= %s, top = %s, curTime = %s', left, top, curTime);
         this.setState({
           left,
           top,
@@ -508,7 +518,7 @@ class ImageContainer extends PureComponent {
       width: screenWidth,
       height: screenHeight,
     };
-    console.info('ImageContainer render');
+    // console.info('ImageContainer render');
     return (
       <div
         className="viewer-image-container"
